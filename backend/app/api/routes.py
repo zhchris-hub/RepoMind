@@ -1,0 +1,88 @@
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
+
+from app.core.database import get_db
+from app.models.project import Project
+from app.services.parser.repo_scanner import analyze_repo
+from app.services.analyzer.ast_analyzer import analyze_ast
+from app.services.ai.architecture import analyze_architecture
+from app.services.rag.rag_service import answer_question
+
+router = APIRouter()
+
+
+class AnalyzeRequest(BaseModel):
+    repo_url: str
+
+
+class ChatRequest(BaseModel):
+    project_id: int
+    question: str
+
+
+class ProjectResponse(BaseModel):
+    id: int
+    name: str
+    repo_url: str
+    status: str
+    tech_stack: str | None
+    directory_tree: str | None
+    overview: str | None
+    architecture_diagram: str | None
+    readme_content: str | None
+    learning_path: str | None
+
+    class Config:
+        from_attributes = True
+
+
+@router.post("/analyze", response_model=ProjectResponse)
+async def create_analysis(req: AnalyzeRequest, db: AsyncSession = Depends(get_db)):
+    project = await analyze_repo(req.repo_url, db)
+    return project
+
+
+@router.get("/projects", response_model=list[ProjectResponse])
+async def list_projects(db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(Project).order_by(Project.created_at.desc()))
+    return result.scalars().all()
+
+
+@router.get("/projects/{project_id}", response_model=ProjectResponse)
+async def get_project(project_id: int, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(Project).where(Project.id == project_id))
+    project = result.scalar_one_or_none()
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    return project
+
+
+@router.post("/projects/{project_id}/analyze-ast")
+async def run_ast_analysis(project_id: int, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(Project).where(Project.id == project_id))
+    project = result.scalar_one_or_none()
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    project = await analyze_ast(project, db)
+    return {"status": "completed", "project_id": project.id}
+
+
+@router.post("/projects/{project_id}/analyze-architecture")
+async def run_architecture_analysis(project_id: int, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(
+        select(Project).options(selectinload(Project.files)).where(Project.id == project_id)
+    )
+    project = result.scalar_one_or_none()
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    project = await analyze_architecture(project, db)
+    return {"status": "completed", "project_id": project.id}
+
+
+@router.post("/chat")
+async def chat(req: ChatRequest, db: AsyncSession = Depends(get_db)):
+    answer = await answer_question(req.project_id, req.question, db)
+    return {"answer": answer}
