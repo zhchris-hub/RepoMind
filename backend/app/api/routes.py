@@ -47,9 +47,19 @@ async def _run_architecture_bg(project_id: int):
             select(Project).options(selectinload(Project.files)).where(Project.id == project_id)
         )
         project = result.scalar_one_or_none()
-        if project and project.status == "parsed":
-            await analyze_architecture(project, db)
-            await index_project(project_id, db)
+        if not project:
+            return
+        if project.status == "parsed":
+            await analyze_ast(project, db)
+            await db.refresh(project)
+        if project.status in ("parsed", "ast_analyzed"):
+            result2 = await db.execute(
+                select(Project).options(selectinload(Project.files)).where(Project.id == project_id)
+            )
+            project = result2.scalar_one_or_none()
+            if project:
+                await analyze_architecture(project, db)
+                await index_project(project_id, db)
 
 
 @router.post("/analyze", response_model=ProjectResponse)

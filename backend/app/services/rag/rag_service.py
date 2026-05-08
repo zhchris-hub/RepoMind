@@ -7,23 +7,27 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import settings
 from app.models.project import Chunk, File, Project
 
+_embedding_model = None
 
-async def generate_embedding(text: str) -> list[float]:
-    async with httpx.AsyncClient(timeout=60.0) as client:
-        response = await client.post(
-            f"{settings.DEEPSEEK_BASE_URL}/v1/embeddings",
-            headers={
-                "Authorization": f"Bearer {settings.DEEPSEEK_API_KEY}",
-                "Content-Type": "application/json",
-            },
-            json={
-                "model": "deepseek-embedding",
-                "input": text,
-            },
-        )
-        response.raise_for_status()
-        data = response.json()
-        return data["data"][0]["embedding"]
+
+def _get_embedding_model():
+    global _embedding_model
+    if _embedding_model is None:
+        from sentence_transformers import SentenceTransformer
+        _embedding_model = SentenceTransformer(settings.EMBEDDING_MODEL)
+    return _embedding_model
+
+
+def generate_embedding(text: str) -> list[float]:
+    model = _get_embedding_model()
+    embedding = model.encode(text, normalize_embeddings=True)
+    return embedding.tolist()
+
+
+async def generate_embedding_async(text: str) -> list[float]:
+    import asyncio
+    loop = asyncio.get_event_loop()
+    return await loop.run_in_executor(None, generate_embedding, text)
 
 
 def chunk_code(content: str, max_chars: int = 1500, overlap: int = 200) -> list[str]:
@@ -56,7 +60,7 @@ async def index_project(project_id: int, db: AsyncSession):
         chunks = chunk_code(file.content)
         for chunk_text in chunks:
             try:
-                embedding = await generate_embedding(chunk_text)
+                embedding = await generate_embedding_async(chunk_text)
                 chunk = Chunk(
                     file_id=file.id,
                     content=chunk_text,
@@ -72,7 +76,7 @@ async def index_project(project_id: int, db: AsyncSession):
 async def search_similar_chunks(
     project_id: int, query: str, db: AsyncSession, top_k: int = 5
 ) -> list[str]:
-    query_embedding = await generate_embedding(query)
+    query_embedding = await generate_embedding_async(query)
 
     result = await db.execute(
         select(Chunk.content)
