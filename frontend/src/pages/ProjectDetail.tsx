@@ -50,11 +50,11 @@ export default function ProjectDetail() {
   // Poll while analysis is in progress
   useEffect(() => {
     if (!id || loading) return;
-    if (project && project.status === "completed") return;
+    if (project && (project.status === "completed" || project.status.startsWith("error"))) return;
 
     const interval = setInterval(async () => {
       const p = await loadProject();
-      if (p && p.status === "completed") {
+      if (p && (p.status === "completed" || p.status.startsWith("error"))) {
         clearInterval(interval);
       }
     }, 2000);

@@ -39,7 +39,7 @@ function buildGraph(fileAnalyses: Record<string, FileInfo>) {
 
     for (const imp of analysis.imports) {
       const matched = [...fileSet].find(
-        (f) => f.includes(imp.replace(".", "/")) || f.includes(imp.split(".")[-1] || "")
+        (f) => f.includes(imp.replace(".", "/")) || f.includes(imp.split(".").pop() || "")
       );
       if (matched) {
         edges.push({ source: path, target: matched });

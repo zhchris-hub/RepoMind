@@ -39,7 +39,10 @@ def chunk_code(content: str, max_chars: int = 1500, overlap: int = 200) -> list[
     for line in lines:
         if current_len + len(line) > max_chars and current_chunk:
             chunks.append("\n".join(current_chunk))
-            overlap_lines = current_chunk[-max(1, overlap // max(1, len(current_chunk[0]))):]
+            # Calculate overlap lines based on average line length
+            avg_line_len = max(1, current_len // len(current_chunk))
+            overlap_line_count = max(1, overlap // avg_line_len)
+            overlap_lines = current_chunk[-overlap_line_count:]
             current_chunk = overlap_lines
             current_len = sum(len(l) for l in current_chunk)
 

@@ -81,7 +81,20 @@ export default function AnalysisOverlay({
   }, [poll]);
 
   const handleContinue = () => {
-    onComplete({ id: projectId } as Project);
+    onComplete({
+      id: projectId,
+      name: projectName,
+      repo_url: "",
+      status: "completed",
+      tech_stack: null,
+      directory_tree: null,
+      overview: null,
+      architecture_diagram: null,
+      readme_content: null,
+      learning_path: null,
+      progress_steps: null,
+      ast_data: null,
+    });
   };
 
   return (
