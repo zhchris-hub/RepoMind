@@ -215,6 +215,7 @@ async def analyze_ast(project: Project, db: AsyncSession) -> Project:
             if analysis["imports"]:
                 analysis_summary["dependency_graph"][file.path] = analysis["imports"]
 
+    project.ast_data = json.dumps(analysis_summary, ensure_ascii=False)
     project.status = "ast_analyzed"
     await db.commit()
     return project

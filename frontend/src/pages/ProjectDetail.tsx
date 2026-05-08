@@ -12,6 +12,7 @@ import {
   Layers,
   Sparkles,
   Zap,
+  Binary,
 } from "lucide-react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -20,8 +21,9 @@ import type { Project } from "../types";
 import DirectoryTree from "../components/DirectoryTree";
 import MermaidDiagram from "../components/MermaidDiagram";
 import ChatPanel from "../components/ChatPanel";
+import KnowledgeGraph from "../components/KnowledgeGraph";
 
-type Tab = "overview" | "structure" | "architecture" | "readme" | "chat";
+type Tab = "overview" | "structure" | "ast" | "architecture" | "readme" | "chat";
 
 export default function ProjectDetail() {
   const { id } = useParams<{ id: string }>();
@@ -98,6 +100,7 @@ export default function ProjectDetail() {
   const tabs: { key: Tab; label: string; icon: React.ReactNode }[] = [
     { key: "overview", label: "概览", icon: <Layers className="w-4 h-4" /> },
     { key: "structure", label: "目录结构", icon: <Code2 className="w-4 h-4" /> },
+    { key: "ast", label: "AST 分析", icon: <Binary className="w-4 h-4" /> },
     { key: "architecture", label: "架构图", icon: <Network className="w-4 h-4" /> },
     { key: "readme", label: "README", icon: <FileText className="w-4 h-4" /> },
     { key: "chat", label: "RepoChat", icon: <MessageSquare className="w-4 h-4" /> },
@@ -263,6 +266,14 @@ export default function ProjectDetail() {
               </motion.div>
             )}
 
+            {tab === "ast" && (
+              <ASTTab
+                project={project}
+                analyzing={analyzing}
+                onRunAnalysis={handleRunArchitecture}
+              />
+            )}
+
             {tab === "architecture" && (
               <motion.div
                 key="architecture"
@@ -365,5 +376,175 @@ function AIButton({
         {children}
       </span>
     </motion.button>
+  );
+}
+
+function ASTTab({
+  project,
+  analyzing,
+  onRunAnalysis,
+}: {
+  project: Project;
+  analyzing: boolean;
+  onRunAnalysis: () => void;
+}) {
+  const [view, setView] = useState<"list" | "graph">("list");
+
+  if (!project.ast_data) {
+    return (
+      <motion.div
+        key="ast"
+        initial={{ opacity: 0, x: -10 }}
+        animate={{ opacity: 1, x: 0 }}
+        exit={{ opacity: 0, x: 10 }}
+        transition={{ duration: 0.2 }}
+      >
+        <h2 className="text-lg font-semibold mb-4 text-dark-800 flex items-center gap-2">
+          <Binary className="w-5 h-5 text-primary-400" />
+          AST 静态分析
+        </h2>
+        <div className="text-center py-16">
+          <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-primary-500/10 to-accent-blue/10 flex items-center justify-center border border-white/[0.06]">
+            <Binary className="w-8 h-8 text-dark-400" />
+          </div>
+          <p className="text-dark-400 mb-6">尚未运行 AST 分析</p>
+          <AIButton onClick={onRunAnalysis} loading={analyzing} icon={<Binary className="w-4 h-4" />}>
+            {analyzing ? "分析中..." : "运行 AST 分析"}
+          </AIButton>
+        </div>
+      </motion.div>
+    );
+  }
+
+  return (
+    <motion.div
+      key="ast"
+      initial={{ opacity: 0, x: -10 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: 10 }}
+      transition={{ duration: 0.2 }}
+    >
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-lg font-semibold text-dark-800 flex items-center gap-2">
+          <Binary className="w-5 h-5 text-primary-400" />
+          AST 静态分析
+        </h2>
+        <div className="flex gap-1 glass rounded-lg p-1">
+          <button
+            onClick={() => setView("list")}
+            className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${
+              view === "list" ? "bg-white/[0.08] text-dark-700" : "text-dark-400 hover:text-dark-500"
+            }`}
+          >
+            列表
+          </button>
+          <button
+            onClick={() => setView("graph")}
+            className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${
+              view === "graph" ? "bg-white/[0.08] text-dark-700" : "text-dark-400 hover:text-dark-500"
+            }`}
+          >
+            图谱
+          </button>
+        </div>
+      </div>
+      {view === "list" ? (
+        <ASTPanel data={project.ast_data} />
+      ) : (
+        <KnowledgeGraph astData={project.ast_data} />
+      )}
+    </motion.div>
+  );
+}
+
+function ASTPanel({ data }: { data: string }) {
+  let parsed: {
+    total_files: number;
+    analyzed_files: number;
+    total_functions: number;
+    total_classes: number;
+    total_imports: number;
+    file_analyses: Record<string, { imports: string[]; functions: { name: string; line: number; params?: string }[]; classes: { name: string; line: number; bases?: string }[] }>;
+    dependency_graph: Record<string, string[]>;
+  };
+  try {
+    parsed = JSON.parse(data);
+  } catch {
+    return <p className="text-red-400">AST 数据解析失败</p>;
+  }
+
+  const topFiles = Object.entries(parsed.file_analyses)
+    .sort((a, b) => (b[1].functions.length + b[1].classes.length) - (a[1].functions.length + a[1].classes.length))
+    .slice(0, 20);
+
+  return (
+    <div className="space-y-6">
+      {/* Stats */}
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+        {[
+          { label: "分析文件", value: parsed.analyzed_files, total: parsed.total_files },
+          { label: "函数", value: parsed.total_functions },
+          { label: "类", value: parsed.total_classes },
+          { label: "Import", value: parsed.total_imports },
+          { label: "依赖关系", value: Object.keys(parsed.dependency_graph).length },
+        ].map((stat) => (
+          <div key={stat.label} className="glass-card p-3 text-center">
+            <p className="text-2xl font-bold bg-gradient-to-r from-primary-300 to-accent-blue bg-clip-text text-transparent">
+              {stat.value}
+            </p>
+            <p className="text-xs text-dark-400 mt-1">
+              {stat.label}
+              {stat.total !== undefined && <span className="text-dark-300">/{stat.total}</span>}
+            </p>
+          </div>
+        ))}
+      </div>
+
+      {/* Top files */}
+      <div>
+        <h3 className="text-sm font-semibold text-dark-600 mb-3">主要文件（按函数/类数量排序）</h3>
+        <div className="space-y-2">
+          {topFiles.map(([path, analysis]) => (
+            <div key={path} className="glass-card p-3">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-mono text-dark-700 truncate">{path}</span>
+                <div className="flex gap-2 shrink-0 ml-3">
+                  {analysis.functions.length > 0 && (
+                    <span className="text-xs px-2 py-0.5 rounded bg-primary-500/10 text-primary-300">
+                      {analysis.functions.length} 函数
+                    </span>
+                  )}
+                  {analysis.classes.length > 0 && (
+                    <span className="text-xs px-2 py-0.5 rounded bg-accent-blue/10 text-accent-blue">
+                      {analysis.classes.length} 类
+                    </span>
+                  )}
+                  {analysis.imports.length > 0 && (
+                    <span className="text-xs px-2 py-0.5 rounded bg-accent-cyan/10 text-accent-cyan">
+                      {analysis.imports.length} import
+                    </span>
+                  )}
+                </div>
+              </div>
+              {/* Functions */}
+              {analysis.functions.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 mt-1">
+                  {analysis.functions.slice(0, 8).map((f) => (
+                    <span key={f.name} className="text-xs px-1.5 py-0.5 rounded bg-white/[0.04] text-dark-500 font-mono">
+                      {f.name}
+                      {f.params && <span className="text-dark-300">{f.params}</span>}
+                      <span className="text-dark-300 ml-1">:{f.line}</span>
+                    </span>
+                  ))}
+                  {analysis.functions.length > 8 && (
+                    <span className="text-xs text-dark-300">+{analysis.functions.length - 8}</span>
+                  )}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
   );
 }

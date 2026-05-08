@@ -10,6 +10,7 @@ export interface Project {
   readme_content: string | null;
   learning_path: string | null;
   progress_steps: string | null;
+  ast_data: string | null;
 }
 
 export interface ProgressStep {

@@ -9,7 +9,7 @@ from app.models.project import Project
 from app.services.parser.repo_scanner import analyze_repo
 from app.services.analyzer.ast_analyzer import analyze_ast
 from app.services.ai.architecture import analyze_architecture
-from app.services.rag.rag_service import answer_question
+from app.services.rag.rag_service import answer_question, index_project
 
 router = APIRouter()
 
@@ -35,6 +35,7 @@ class ProjectResponse(BaseModel):
     readme_content: str | None
     learning_path: str | None
     progress_steps: str | None
+    ast_data: str | None
 
     class Config:
         from_attributes = True
@@ -48,6 +49,7 @@ async def _run_architecture_bg(project_id: int):
         project = result.scalar_one_or_none()
         if project and project.status == "parsed":
             await analyze_architecture(project, db)
+            await index_project(project_id, db)
 
 
 @router.post("/analyze", response_model=ProjectResponse)
@@ -91,6 +93,7 @@ async def run_architecture_analysis(project_id: int, db: AsyncSession = Depends(
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
     project = await analyze_architecture(project, db)
+    await index_project(project_id, db)
     return {"status": "completed", "project_id": project.id}
 
 
