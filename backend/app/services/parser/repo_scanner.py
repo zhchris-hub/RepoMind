@@ -179,11 +179,28 @@ def build_directory_tree(root_dir: str, max_depth: int = 4) -> str:
     return "\n".join(lines)
 
 
+def _make_progress(steps: list[dict]) -> str:
+    return json.dumps(steps, ensure_ascii=False)
+
+
+def _update_step(steps: list[dict], key: str, status: str) -> list[dict]:
+    for s in steps:
+        if s["key"] == key:
+            s["status"] = status
+    return steps
+
+
 async def analyze_repo(repo_url: str, db: AsyncSession) -> Project:
     project = Project(
         name=repo_url.rstrip("/").split("/")[-1].replace(".git", ""),
         repo_url=repo_url,
         status="cloning",
+        progress_steps=_make_progress([
+            {"key": "clone", "label": "克隆仓库", "status": "active"},
+            {"key": "scan", "label": "扫描文件", "status": "pending"},
+            {"key": "techstack", "label": "检测技术栈", "status": "pending"},
+            {"key": "parse", "label": "解析完成", "status": "pending"},
+        ]),
     )
     db.add(project)
     await db.commit()
@@ -191,14 +208,26 @@ async def analyze_repo(repo_url: str, db: AsyncSession) -> Project:
 
     try:
         clone_dir = clone_repo(repo_url)
+        steps = json.loads(project.progress_steps)
+        steps = _update_step(steps, "clone", "done")
+        steps = _update_step(steps, "scan", "active")
+        project.progress_steps = _make_progress(steps)
         project.status = "scanning"
         await db.commit()
 
         tech_stack = detect_tech_stack(clone_dir)
         project.tech_stack = json.dumps(tech_stack)
+        steps = _update_step(steps, "scan", "done")
+        steps = _update_step(steps, "techstack", "active")
+        project.progress_steps = _make_progress(steps)
+        await db.commit()
 
         directory_tree = build_directory_tree(clone_dir)
         project.directory_tree = directory_tree
+        steps = _update_step(steps, "techstack", "done")
+        steps = _update_step(steps, "parse", "active")
+        project.progress_steps = _make_progress(steps)
+        await db.commit()
 
         files = scan_directory(clone_dir)
         for file_data in files:
@@ -210,6 +239,8 @@ async def analyze_repo(repo_url: str, db: AsyncSession) -> Project:
             )
             db.add(db_file)
 
+        steps = _update_step(steps, "parse", "done")
+        project.progress_steps = _make_progress(steps)
         project.status = "parsed"
         await db.commit()
         await db.refresh(project)

@@ -1,10 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.core.database import get_db
+from app.core.database import async_session, get_db
 from app.models.project import Project
 from app.services.parser.repo_scanner import analyze_repo
 from app.services.analyzer.ast_analyzer import analyze_ast
@@ -34,14 +34,26 @@ class ProjectResponse(BaseModel):
     architecture_diagram: str | None
     readme_content: str | None
     learning_path: str | None
+    progress_steps: str | None
 
     class Config:
         from_attributes = True
 
 
+async def _run_architecture_bg(project_id: int):
+    async with async_session() as db:
+        result = await db.execute(
+            select(Project).options(selectinload(Project.files)).where(Project.id == project_id)
+        )
+        project = result.scalar_one_or_none()
+        if project and project.status == "parsed":
+            await analyze_architecture(project, db)
+
+
 @router.post("/analyze", response_model=ProjectResponse)
-async def create_analysis(req: AnalyzeRequest, db: AsyncSession = Depends(get_db)):
+async def create_analysis(req: AnalyzeRequest, background_tasks: BackgroundTasks, db: AsyncSession = Depends(get_db)):
     project = await analyze_repo(req.repo_url, db)
+    background_tasks.add_task(_run_architecture_bg, project.id)
     return project
 
 

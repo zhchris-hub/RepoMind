@@ -20,6 +20,7 @@ class Project(Base):
     architecture_diagram: Mapped[str | None] = mapped_column(Text, nullable=True)
     readme_content: Mapped[str | None] = mapped_column(Text, nullable=True)
     learning_path: Mapped[str | None] = mapped_column(Text, nullable=True)
+    progress_steps: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime, server_default=func.now(), nullable=False
     )

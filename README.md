@@ -1,67 +1,61 @@
-# RepoMind
+<p align="center">
+  <img src="assets/banner.svg" alt="RepoMind" width="100%">
+</p>
 
-> 让 AI 在数十秒内理解任意 GitHub 仓库，帮助开发者快速上手复杂代码库。
+<p align="center">
+  <a href="#"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License"></a>
+  <img src="https://img.shields.io/badge/Python-3.11+-3776ab.svg?logo=python&logoColor=white" alt="Python">
+  <img src="https://img.shields.io/badge/TypeScript-5.6-3178c6.svg?logo=typescript&logoColor=white" alt="TypeScript">
+  <img src="https://img.shields.io/badge/FastAPI-0.115-009688.svg?logo=fastapi&logoColor=white" alt="FastAPI">
+  <img src="https://img.shields.io/badge/React-18-61dafb.svg?logo=react&logoColor=black" alt="React">
+</p>
 
-RepoMind 是一个面向开发者的 AI 仓库理解与架构分析平台。输入一个 GitHub 仓库链接，即可自动获得项目结构分析、架构图、模块说明、技术栈识别，以及基于 RAG 的项目问答能力。
+<p align="center">
+  <strong>AI 替你阅读源码。</strong>输入 GitHub 仓库链接，30 秒内获得架构分析、模块文档和智能问答。
+</p>
 
-## 核心功能
+---
 
-- **仓库解析** — 自动克隆仓库、扫描文件、识别技术栈（React、FastAPI、SpringBoot 等）
-- **AST 静态分析** — 基于 tree-sitter 的函数/类/import 关系分析
-- **AI 架构分析** — LLM 驱动的项目概述、模块职责、架构模式识别（MVC、微服务、分层、DDD）
-- **Mermaid 架构图** — 自动生成系统架构图、调用关系图、模块依赖图、数据流图
-- **RepoChat 问答** — 基于 RAG 的项目级问答（如"认证逻辑在哪里？"）
-- **自动 README 生成** — AI 自动生成项目文档
-- **学习路径生成** — 为复杂项目推荐代码阅读顺序
+## 核心能力
 
-## 技术栈
+**架构图自动生成** — AI 分析代码结构，自动生成 Mermaid 架构图、模块依赖关系和调用链路。
 
-| 层级 | 技术 |
-|------|------|
-| 后端 | Python · FastAPI · SQLAlchemy · PostgreSQL · pgvector |
-| 前端 | React · TypeScript · TailwindCSS · Mermaid · Cytoscape.js |
-| AI | DeepSeek API · BGE-M3 · RAG |
-| 分析 | tree-sitter |
+**RAG 智能问答** — 基于向量检索的项目级问答。问一句"认证逻辑在哪里？"，直接定位代码位置。
 
-## 系统架构
+**学习路径推荐** — 为复杂项目生成推荐阅读顺序，新人 onboarding 从数天缩短到数小时。
 
-```
-React Web UI → FastAPI Backend
-                   ├── AST 分析 (tree-sitter)
-                   ├── RAG 检索 (pgvector + BGE-M3)
-                   └── AI 推理 (DeepSeek API)
-                           ↓
-                      PostgreSQL
-```
+## Demo
+
+<p align="center">
+  <em>截图和 GIF 演示待添加 — 运行项目后可自行体验完整流程</em>
+</p>
 
 ## 快速开始
 
-### 环境要求
+### Docker Compose（推荐）
 
-- Python 3.11+
-- Node.js 18+
-- PostgreSQL 15+（需启用 pgvector 扩展）
+```bash
+cp backend/.env.example backend/.env
+# 编辑 .env 填入 DEEPSEEK_API_KEY
 
-### 后端
+docker compose up
+```
+
+访问 http://localhost:5173
+
+### 手动部署
+
+**后端：**
 
 ```bash
 cd backend
-python -m venv .venv
-source .venv/bin/activate
+python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
-
-# 配置数据库
-cp .env.example .env
-# 编辑 .env 填入数据库连接和 DeepSeek API Key
-
-# 运行数据库迁移
-alembic upgrade head
-
-# 启动服务
+cp .env.example .env  # 填入数据库连接和 DeepSeek API Key
 uvicorn app.main:app --reload --port 8000
 ```
 
-### 前端
+**前端：**
 
 ```bash
 cd frontend
@@ -69,49 +63,67 @@ npm install
 npm run dev
 ```
 
-访问 http://localhost:5173
+### 使用方式
 
-### 使用
+1. 粘贴一个 GitHub 仓库链接
+2. 等待 AI 自动完成分析（约 30 秒）
+3. 查看架构图、目录结构、项目概述
+4. 使用 RepoChat 向代码库提问
 
-1. 在页面输入 GitHub 仓库链接
-2. 点击"分析"，等待 AI 完成解析
-3. 查看项目结构、架构图、模块说明
-4. 使用 RepoChat 向项目提问
+## 技术栈
+
+| 层级 | 技术 |
+|------|------|
+| 前端 | React 18 · TypeScript · Vite · TailwindCSS · framer-motion · Mermaid |
+| 后端 | FastAPI · SQLAlchemy (async) · Alembic · tree-sitter |
+| 数据库 | PostgreSQL 16 · pgvector (向量检索) |
+| AI | DeepSeek API (LLM 推理 + Embedding) · RAG Pipeline |
+
+## 系统架构
+
+```
+┌─────────────────┐     ┌──────────────────┐     ┌──────────────┐
+│   React UI      │────▶│   FastAPI         │────▶│  PostgreSQL  │
+│   (Vite + TS)   │     │   Backend         │     │  + pgvector  │
+└─────────────────┘     └────────┬─────────┘     └──────────────┘
+                                 │
+                     ┌───────────┼───────────┐
+                     │           │           │
+               ┌─────▼─────┐ ┌──▼────────┐ ┌▼────────────┐
+               │ DeepSeek  │ │tree-sitter│ │  Repo       │
+               │ API       │ │ AST       │ │  Scanner    │
+               └───────────┘ └───────────┘ └─────────────┘
+```
 
 ## 项目结构
 
 ```
 RepoMind/
-├── backend/                # FastAPI 后端
-│   ├── app/
-│   │   ├── api/            # API 路由
-│   │   ├── core/           # 配置、依赖注入
-│   │   ├── models/         # SQLAlchemy 模型
-│   │   ├── services/       # 业务逻辑
-│   │   │   ├── parser/     # 仓库解析
-│   │   │   ├── analyzer/   # AST 分析
-│   │   │   ├── ai/         # AI 推理
-│   │   │   └── rag/        # RAG 检索
-│   │   └── main.py         # 应用入口
-│   ├── alembic/            # 数据库迁移
-│   └── requirements.txt
-├── frontend/               # React 前端
-│   ├── src/
-│   │   ├── components/     # UI 组件
-│   │   ├── pages/          # 页面
-│   │   ├── hooks/          # 自定义 Hooks
-│   │   └── services/       # API 调用
-│   └── package.json
-└── README.md
+├── backend/
+│   └── app/
+│       ├── api/routes.py          # API 端点 (6 个)
+│       ├── core/                   # 配置 + 数据库连接
+│       ├── models/project.py       # ORM 模型 (Project, File, Chunk)
+│       └── services/
+│           ├── parser/             # 仓库克隆 + 文件扫描 + 技术栈检测
+│           ├── analyzer/           # tree-sitter AST 分析
+│           ├── ai/                 # DeepSeek LLM 调用
+│           └── rag/                # Embedding + 向量检索 + Q&A
+├── frontend/
+│   └── src/
+│       ├── pages/                  # Home + ProjectDetail
+│       ├── components/             # ChatPanel, DirectoryTree, MermaidDiagram
+│       └── services/api.ts         # Fetch API 客户端
+└── docker-compose.yml
 ```
 
 ## 开发阶段
 
-- [x] Phase 1: 基础仓库解析（文件扫描、技术栈识别、目录树）
-- [ ] Phase 2: AST 静态分析（import/函数/类/调用关系）
-- [ ] Phase 3: AI 集成（DeepSeek API、自动 README、架构分析）
-- [ ] Phase 4: RepoChat（embedding、RAG、项目问答）
-- [ ] Phase 5: 体验优化（UI、架构图、学习路径）
+- [x] Phase 1: 仓库解析 — 克隆、文件扫描、技术栈识别、目录树
+- [x] Phase 2: AST 分析 — tree-sitter 多语言函数/类/import 提取
+- [x] Phase 3: AI 集成 — DeepSeek API、架构图、README 生成
+- [x] Phase 4: RepoChat — Embedding、RAG、项目问答
+- [ ] Phase 5: 体验优化 — 交互式知识图谱、学习路径
 
 ## License
 

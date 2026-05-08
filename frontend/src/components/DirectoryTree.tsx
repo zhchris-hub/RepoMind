@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { ChevronRight, ChevronDown, Folder, File } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { ChevronRight, Folder, File } from "lucide-react";
 
 interface TreeNode {
   name: string;
@@ -44,37 +45,49 @@ function TreeNodeView({ node, depth = 0 }: { node: TreeNode; depth?: number }) {
 
   return (
     <div>
-      <div
-        className="flex items-center gap-1 py-0.5 px-2 hover:bg-gray-100 rounded cursor-pointer text-sm"
+      <motion.div
+        className="flex items-center gap-1 py-1 px-2 hover:bg-white/[0.04] rounded-lg cursor-pointer text-sm group transition-colors duration-200"
         style={{ paddingLeft: `${depth * 16 + 8}px` }}
         onClick={() => node.isDir && setExpanded(!expanded)}
+        initial={{ opacity: 0, x: -5 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.2 }}
       >
         {node.isDir ? (
           <>
-            {expanded ? (
-              <ChevronDown className="w-4 h-4 text-gray-400" />
-            ) : (
-              <ChevronRight className="w-4 h-4 text-gray-400" />
-            )}
-            <Folder className="w-4 h-4 text-blue-500" />
+            <motion.div
+              animate={{ rotate: expanded ? 90 : 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              <ChevronRight className="w-4 h-4 text-dark-400" />
+            </motion.div>
+            <Folder className="w-4 h-4 text-primary-400" />
           </>
         ) : (
           <>
             <span className="w-4" />
-            <File className="w-4 h-4 text-gray-400" />
+            <File className="w-4 h-4 text-dark-400 group-hover:text-dark-500 transition-colors" />
           </>
         )}
-        <span className={node.isDir ? "font-medium text-gray-800" : "text-gray-600"}>
+        <span className={node.isDir ? "font-medium text-dark-700" : "text-dark-500 group-hover:text-dark-600 transition-colors"}>
           {node.name}
         </span>
-      </div>
-      {node.isDir && expanded && (
-        <div>
-          {node.children.map((child, i) => (
-            <TreeNodeView key={`${child.name}-${i}`} node={child} depth={depth + 1} />
-          ))}
-        </div>
-      )}
+      </motion.div>
+      <AnimatePresence>
+        {node.isDir && expanded && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2, ease: "easeOut" }}
+            className="overflow-hidden"
+          >
+            {node.children.map((child, i) => (
+              <TreeNodeView key={`${child.name}-${i}`} node={child} depth={depth + 1} />
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
@@ -83,10 +96,15 @@ export default function DirectoryTree({ tree }: { tree: string }) {
   const nodes = parseTree(tree);
 
   return (
-    <div className="font-mono text-sm bg-gray-50 rounded-lg p-4 overflow-auto max-h-[600px]">
+    <motion.div
+      className="font-mono text-sm bg-white/[0.02] rounded-xl p-4 overflow-auto max-h-[600px] border border-white/[0.04]"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.3 }}
+    >
       {nodes.map((node, i) => (
         <TreeNodeView key={`${node.name}-${i}`} node={node} />
       ))}
-    </div>
+    </motion.div>
   );
 }

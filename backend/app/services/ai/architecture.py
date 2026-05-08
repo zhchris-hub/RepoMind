@@ -7,6 +7,14 @@ from app.core.config import settings
 from app.models.project import Project
 
 
+def _update_progress(project: Project, key: str, status: str):
+    steps = json.loads(project.progress_steps) if project.progress_steps else []
+    for s in steps:
+        if s["key"] == key:
+            s["status"] = status
+    project.progress_steps = json.dumps(steps, ensure_ascii=False)
+
+
 async def call_deepseek(prompt: str, system: str = "") -> str:
     messages = []
     if system:
@@ -146,10 +154,35 @@ async def generate_learning_path(project: Project) -> str:
 
 
 async def analyze_architecture(project: Project, db: AsyncSession) -> Project:
+    # Initialize architecture progress steps
+    arch_steps = [
+        {"key": "overview", "label": "生成项目概述", "status": "active"},
+        {"key": "diagram", "label": "生成架构图", "status": "pending"},
+        {"key": "readme", "label": "生成 README", "status": "pending"},
+        {"key": "learning", "label": "生成学习路径", "status": "pending"},
+        {"key": "done", "label": "分析完成", "status": "pending"},
+    ]
+    project.progress_steps = json.dumps(arch_steps, ensure_ascii=False)
+    await db.commit()
+
     project.overview = await generate_overview(project)
+    _update_progress(project, "overview", "done")
+    _update_progress(project, "diagram", "active")
+    await db.commit()
+
     project.architecture_diagram = await generate_architecture_diagram(project)
+    _update_progress(project, "diagram", "done")
+    _update_progress(project, "readme", "active")
+    await db.commit()
+
     project.readme_content = await generate_readme(project)
+    _update_progress(project, "readme", "done")
+    _update_progress(project, "learning", "active")
+    await db.commit()
+
     project.learning_path = await generate_learning_path(project)
+    _update_progress(project, "learning", "done")
+    _update_progress(project, "done", "done")
     project.status = "completed"
     await db.commit()
     await db.refresh(project)
