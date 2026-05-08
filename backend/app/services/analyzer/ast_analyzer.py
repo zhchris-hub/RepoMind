@@ -35,10 +35,8 @@ def get_parser(language: str) -> Parser | None:
         return _parser_cache[ts_lang_name]
 
     try:
-        from tree_sitter_languages import get_language
-        lang = get_language(ts_lang_name)
-        parser = Parser()
-        parser.set_language(lang)
+        from tree_sitter_languages import get_parser as ts_get_parser
+        parser = ts_get_parser(ts_lang_name)
         _parser_cache[ts_lang_name] = parser
         return parser
     except Exception:
