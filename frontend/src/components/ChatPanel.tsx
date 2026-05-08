@@ -57,7 +57,7 @@ export default function ChatPanel({ projectId }: { projectId: number }) {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
             >
-              <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-primary-500/10 to-accent-blue/10 flex items-center justify-center border border-white/[0.06]">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-dark-100 flex items-center justify-center border border-black/[0.06]">
                 <Bot className="w-8 h-8 text-dark-400" />
               </div>
               <p className="text-dark-500 mb-3">向项目提问，例如：</p>
@@ -88,14 +88,14 @@ export default function ChatPanel({ projectId }: { projectId: number }) {
               transition={{ duration: 0.3, ease: "easeOut" }}
             >
               {msg.role === "assistant" && (
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary-500/20 to-accent-blue/20 flex items-center justify-center shrink-0 border border-white/[0.06]">
+                <div className="w-8 h-8 rounded-full bg-dark-100 flex items-center justify-center shrink-0 border border-black/[0.06]">
                   <Bot className="w-4 h-4 text-primary-400" />
                 </div>
               )}
               <div
                 className={`max-w-[80%] rounded-xl px-4 py-3 text-sm ${
                   msg.role === "user"
-                    ? "bg-gradient-to-r from-primary-600 to-primary-500 text-white shadow-lg shadow-primary-500/20"
+                    ? "bg-gradient-to-r from-primary-600 to-primary-500 text-white shadow-lg shadow-primary-500/10"
                     : "glass text-dark-700 prose prose-sm max-w-none"
                 }`}
               >
@@ -106,7 +106,7 @@ export default function ChatPanel({ projectId }: { projectId: number }) {
                 )}
               </div>
               {msg.role === "user" && (
-                <div className="w-8 h-8 rounded-full bg-white/[0.08] flex items-center justify-center shrink-0 border border-white/[0.06]">
+                <div className="w-8 h-8 rounded-full bg-dark-100 flex items-center justify-center shrink-0 border border-black/[0.06]">
                   <User className="w-4 h-4 text-dark-400" />
                 </div>
               )}
@@ -120,7 +120,7 @@ export default function ChatPanel({ projectId }: { projectId: number }) {
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
           >
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary-500/20 to-accent-blue/20 flex items-center justify-center shrink-0 border border-white/[0.06]">
+            <div className="w-8 h-8 rounded-full bg-dark-100 flex items-center justify-center shrink-0 border border-black/[0.06]">
               <Bot className="w-4 h-4 text-primary-400" />
             </div>
             <div className="glass rounded-xl px-4 py-3 flex items-center gap-1.5">
@@ -134,21 +134,20 @@ export default function ChatPanel({ projectId }: { projectId: number }) {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input Bar */}
-      <div className="flex gap-2 pt-4 border-t border-white/[0.06]">
+      <div className="flex gap-2 pt-4 border-t border-black/[0.06]">
         <input
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && handleSend()}
           placeholder="输入关于项目的问题..."
-          className="flex-1 px-4 py-2.5 bg-white/[0.05] border border-white/[0.08] rounded-xl focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500/50 outline-none text-sm text-dark-800 placeholder:text-dark-400 transition-all duration-300"
+          className="flex-1 px-4 py-2.5 bg-white/60 border border-black/[0.06] rounded-xl focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500/40 outline-none text-sm text-dark-800 placeholder:text-dark-400 transition-all duration-300"
           disabled={loading}
         />
         <motion.button
           onClick={handleSend}
           disabled={loading || !input.trim()}
-          className="px-4 py-2.5 bg-gradient-to-r from-primary-600 to-primary-500 text-white rounded-xl hover:from-primary-500 hover:to-primary-400 disabled:opacity-40 disabled:cursor-not-allowed shadow-lg shadow-primary-500/20 hover:shadow-primary-500/40 transition-all duration-300"
+          className="px-4 py-2.5 bg-gradient-to-r from-primary-600 to-primary-500 text-white rounded-xl hover:from-primary-500 hover:to-primary-400 disabled:opacity-40 disabled:cursor-not-allowed shadow-lg shadow-primary-500/10 hover:shadow-primary-500/20 transition-all duration-300"
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
         >

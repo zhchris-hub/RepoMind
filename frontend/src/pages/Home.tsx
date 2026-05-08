@@ -33,22 +33,22 @@ const demoFeatures = [
     icon: Network,
     title: "架构图",
     desc: "自动生成 Mermaid 系统架构图",
-    gradient: "from-primary-500/20 to-accent-blue/20",
-    iconColor: "text-primary-400",
+    gradient: "from-primary-500/10 to-primary-600/10",
+    iconColor: "text-primary-500",
     mock: (
       <div className="space-y-2 text-xs font-mono">
         <div className="flex items-center gap-2">
-          <span className="w-16 h-5 rounded bg-primary-500/20 border border-primary-500/30 flex items-center justify-center text-primary-300">Frontend</span>
+          <span className="w-16 h-5 rounded bg-primary-50 border border-primary-200 flex items-center justify-center text-primary-600">Frontend</span>
           <span className="text-dark-300">→</span>
-          <span className="w-16 h-5 rounded bg-accent-blue/20 border border-accent-blue/30 flex items-center justify-center text-accent-blue">Backend</span>
+          <span className="w-16 h-5 rounded bg-dark-100 border border-black/[0.06] flex items-center justify-center text-dark-500">Backend</span>
         </div>
         <div className="pl-8">
           <span className="text-dark-300">↓</span>
         </div>
         <div className="flex items-center gap-2 pl-4">
-          <span className="w-14 h-5 rounded bg-accent-cyan/20 border border-accent-cyan/30 flex items-center justify-center text-accent-cyan">DB</span>
+          <span className="w-14 h-5 rounded bg-dark-100 border border-black/[0.06] flex items-center justify-center text-dark-500">DB</span>
           <span className="text-dark-300">+</span>
-          <span className="w-14 h-5 rounded bg-accent-emerald/20 border border-accent-emerald/30 flex items-center justify-center text-accent-emerald">API</span>
+          <span className="w-14 h-5 rounded bg-dark-100 border border-black/[0.06] flex items-center justify-center text-dark-500">API</span>
         </div>
       </div>
     ),
@@ -57,8 +57,8 @@ const demoFeatures = [
     icon: Code2,
     title: "目录结构",
     desc: "智能解析项目文件树",
-    gradient: "from-accent-blue/20 to-accent-cyan/20",
-    iconColor: "text-accent-blue",
+    gradient: "from-dark-100 to-dark-200",
+    iconColor: "text-dark-500",
     mock: (
       <div className="space-y-1 text-xs font-mono text-dark-400">
         <div className="flex items-center gap-1.5">
@@ -88,20 +88,20 @@ const demoFeatures = [
     icon: MessageSquare,
     title: "AI 问答",
     desc: "基于 RAG 的项目级问答",
-    gradient: "from-accent-cyan/20 to-accent-emerald/20",
-    iconColor: "text-accent-cyan",
+    gradient: "from-primary-50 to-primary-100",
+    iconColor: "text-primary-500",
     mock: (
       <div className="space-y-2 text-xs">
         <div className="flex justify-end">
-          <span className="px-2 py-1 rounded-lg bg-primary-500/20 text-primary-300 max-w-[80%]">
+          <span className="px-2 py-1 rounded-lg bg-primary-50 text-primary-600 max-w-[80%]">
             认证逻辑在哪里？
           </span>
         </div>
         <div className="flex gap-1.5">
-          <span className="w-4 h-4 rounded-full bg-primary-500/20 flex items-center justify-center shrink-0">
-            <span className="text-[8px] text-primary-400">AI</span>
+          <span className="w-4 h-4 rounded-full bg-primary-50 flex items-center justify-center shrink-0">
+            <span className="text-[8px] text-primary-500">AI</span>
           </span>
-          <span className="px-2 py-1 rounded-lg bg-white/[0.04] text-dark-400 border border-white/[0.06] max-w-[80%]">
+          <span className="px-2 py-1 rounded-lg bg-dark-50 text-dark-500 border border-black/[0.04] max-w-[80%]">
             认证逻辑在 src/auth/ middleware.ts...
           </span>
         </div>
@@ -155,26 +155,27 @@ export default function Home() {
 
       {/* Hero Section */}
       <motion.div
-        className="text-center mb-12"
+        className="text-center mb-12 hero-bg"
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.7, ease: "easeOut" }}
       >
-        {/* Title */}
         <motion.h1
           className="text-4xl sm:text-5xl font-extrabold mb-5 leading-tight tracking-tight"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1, duration: 0.7 }}
         >
-          <span className="bg-gradient-to-r from-primary-300 via-primary-400 to-accent-blue bg-clip-text text-transparent">
+          <span
+            className="glitch-text bg-gradient-to-r from-primary-300 via-primary-400 to-primary-500 bg-clip-text text-transparent"
+            data-text="30 秒读懂"
+          >
             30 秒读懂
           </span>
           <br />
           <span className="text-dark-800">任何 GitHub 项目</span>
         </motion.h1>
 
-        {/* Subtitle */}
         <motion.p
           className="text-base text-dark-500 max-w-lg mx-auto leading-relaxed"
           initial={{ opacity: 0, y: 20 }}
@@ -192,8 +193,7 @@ export default function Home() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3, duration: 0.7 }}
       >
-        <div className="absolute -inset-[1px] rounded-2xl bg-gradient-to-r from-primary-500/30 via-accent-blue/30 to-accent-cyan/30 blur-sm" />
-        <div className="glass-card p-5 relative">
+        <div className="glass-card p-5">
           <div className="flex gap-3">
             <div className="flex-1 relative">
               <GitBranch className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-dark-400" />
@@ -203,14 +203,14 @@ export default function Home() {
                 onChange={(e) => setRepoUrl(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleAnalyze()}
                 placeholder="粘贴 GitHub 仓库链接..."
-                className="w-full pl-12 pr-4 py-3.5 bg-white/[0.05] border border-white/[0.08] rounded-xl focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500/50 outline-none text-dark-800 placeholder:text-dark-400 transition-all duration-300"
+                className="w-full pl-12 pr-4 py-3.5 bg-white/60 border border-black/[0.06] rounded-xl focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500/40 outline-none text-dark-800 placeholder:text-dark-400 transition-all duration-300"
                 disabled={loading}
               />
             </div>
             <motion.button
               onClick={handleAnalyze}
               disabled={loading || !repoUrl.trim()}
-              className="px-6 py-3.5 bg-gradient-to-r from-primary-600 to-primary-500 text-white rounded-xl hover:from-primary-500 hover:to-primary-400 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2 font-medium shadow-lg shadow-primary-500/20 hover:shadow-primary-500/40 transition-all duration-300"
+              className="px-6 py-3.5 bg-gradient-to-r from-primary-600 to-primary-500 text-white rounded-xl hover:from-primary-500 hover:to-primary-400 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2 font-medium glow-blue transition-all duration-300"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
@@ -245,7 +245,7 @@ export default function Home() {
           <motion.div
             key={feature.title}
             variants={itemVariants}
-            className="glass-card p-5 group hover:bg-white/[0.04] hover:border-white/[0.1] transition-all duration-300"
+            className="glass-card card-3d p-5 group"
           >
             <div className="flex items-center gap-2.5 mb-3">
               <div
@@ -258,7 +258,7 @@ export default function Home() {
                 <p className="text-xs text-dark-400">{feature.desc}</p>
               </div>
             </div>
-            <div className="bg-white/[0.02] rounded-lg p-3 border border-white/[0.04] min-h-[80px]">
+            <div className="bg-dark-50 rounded-lg p-3 border border-black/[0.04] min-h-[80px]">
               {feature.mock}
             </div>
           </motion.div>
@@ -275,7 +275,7 @@ export default function Home() {
           <motion.div variants={itemVariants} className="flex items-center gap-3 mb-5">
             <Clock className="w-4 h-4 text-dark-400" />
             <h2 className="text-sm font-semibold text-dark-600 uppercase tracking-wider">历史项目</h2>
-            <span className="px-2 py-0.5 rounded-full bg-white/[0.06] text-xs text-dark-500 font-medium">
+            <span className="px-2 py-0.5 rounded-full bg-dark-100 text-xs text-dark-500 font-medium">
               {projects.length}
             </span>
           </motion.div>
@@ -286,18 +286,16 @@ export default function Home() {
                 key={p.id}
                 variants={itemVariants}
                 onClick={() => navigate(`/project/${p.id}`)}
-                className="group glass-card p-4 cursor-pointer hover:bg-white/[0.05] hover:border-white/[0.1] transition-all duration-300 relative overflow-hidden"
+                className="group glass-card p-4 cursor-pointer relative overflow-hidden"
                 whileHover={{ x: 4 }}
               >
-                <div className="absolute inset-0 bg-gradient-to-r from-primary-500/[0.03] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-
                 <div className="flex items-center justify-between relative">
                   <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-primary-500/15 to-accent-blue/15 flex items-center justify-center border border-white/[0.06]">
+                    <div className="w-9 h-9 rounded-lg bg-dark-100 flex items-center justify-center border border-black/[0.04]">
                       <GitBranch className="w-4 h-4 text-primary-400" />
                     </div>
                     <div>
-                      <h3 className="text-sm font-semibold text-dark-700 group-hover:text-primary-300 transition-colors duration-300">
+                      <h3 className="text-sm font-semibold text-dark-700 group-hover:text-primary-400 transition-colors duration-300">
                         {p.name}
                       </h3>
                       <p className="text-xs text-dark-400 font-mono truncate max-w-[300px]">{p.repo_url}</p>
@@ -310,12 +308,12 @@ export default function Home() {
                         p.status === "completed"
                           ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
                           : p.status === "parsed"
-                            ? "bg-accent-blue/10 text-accent-blue border border-accent-blue/20"
-                            : "bg-white/[0.06] text-dark-500 border border-white/[0.06]"
+                            ? "bg-primary-500/10 text-primary-400 border border-primary-500/20"
+                            : "bg-dark-100 text-dark-500 border border-black/[0.04]"
                       }`}
                     >
                       <span className={`inline-block w-1.5 h-1.5 rounded-full mr-1 ${
-                        p.status === "completed" ? "bg-emerald-400" : p.status === "parsed" ? "bg-accent-blue" : "bg-dark-400"
+                        p.status === "completed" ? "bg-emerald-400" : p.status === "parsed" ? "bg-primary-400" : "bg-dark-400"
                       }`} />
                       {p.status === "completed" ? "已完成" : p.status === "parsed" ? "已解析" : p.status}
                     </span>

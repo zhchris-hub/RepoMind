@@ -38,7 +38,6 @@ function buildGraph(fileAnalyses: Record<string, FileInfo>) {
     });
 
     for (const imp of analysis.imports) {
-      // Try to match import to a file in the project
       const matched = [...fileSet].find(
         (f) => f.includes(imp.replace(".", "/")) || f.includes(imp.split(".")[-1] || "")
       );
@@ -61,11 +60,7 @@ function buildGraph(fileAnalyses: Record<string, FileInfo>) {
   return { nodes, edges };
 }
 
-export default function KnowledgeGraph({
-  astData,
-}: {
-  astData: string;
-}) {
+export default function KnowledgeGraph({ astData }: { astData: string }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const cyRef = useRef<cytoscape.Core | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -113,12 +108,12 @@ export default function KnowledgeGraph({
         {
           selector: "node[type='file']",
           style: {
-            "background-color": "#7e22ce",
-            "border-color": "#a855f7",
+            "background-color": "#0284c7",
+            "border-color": "#0ea5e9",
             "border-width": 2,
             label: "data(label)",
             "font-size": "10px",
-            color: "#d4d4d8",
+            color: "#424245",
             "text-valign": "bottom",
             "text-margin-y": 5,
             width: "data(nodeSize)",
@@ -129,12 +124,12 @@ export default function KnowledgeGraph({
         {
           selector: "node[type='module']",
           style: {
-            "background-color": "#1e40af",
-            "border-color": "#3b82f6",
+            "background-color": "#e8e8ed",
+            "border-color": "#aeaeb2",
             "border-width": 1,
             label: "data(label)",
             "font-size": "9px",
-            color: "#a1a1aa",
+            color: "#6e6e73",
             "text-valign": "bottom",
             "text-margin-y": 5,
             width: 18,
@@ -147,8 +142,8 @@ export default function KnowledgeGraph({
           selector: "edge",
           style: {
             width: 1,
-            "line-color": "#3f3f46",
-            "target-arrow-color": "#52525b",
+            "line-color": "#d1d5db",
+            "target-arrow-color": "#aeaeb2",
             "target-arrow-shape": "triangle",
             "arrow-scale": 0.6,
             "curve-style": "bezier",
@@ -158,18 +153,18 @@ export default function KnowledgeGraph({
         {
           selector: "node:selected",
           style: {
-            "border-color": "#06b6d4",
+            "border-color": "#0ea5e9",
             "border-width": 3,
-            "background-color": "#0e7490",
+            "background-color": "#0284c7",
           } as cytoscape.Css.Node,
         },
         {
           selector: ".highlighted",
           style: {
-            "background-color": "#06b6d4",
-            "border-color": "#22d3ee",
-            "line-color": "#06b6d4",
-            "target-arrow-color": "#06b6d4",
+            "background-color": "#0284c7",
+            "border-color": "#38bdf8",
+            "line-color": "#0ea5e9",
+            "target-arrow-color": "#0ea5e9",
             opacity: 1,
           } as cytoscape.Css.Node,
         },
@@ -205,7 +200,6 @@ export default function KnowledgeGraph({
         classes: node.data("classes"),
       });
 
-      // Highlight neighbors
       cy.elements().removeClass("highlighted");
       node.addClass("highlighted");
       node.neighborhood("node").addClass("highlighted");
@@ -239,17 +233,17 @@ export default function KnowledgeGraph({
 
   const toolbar = (
     <div className="flex items-center gap-1">
-      <button onClick={handleZoomOut} className="p-1.5 rounded-lg hover:bg-white/[0.06] text-dark-400 hover:text-dark-600 transition-colors" title="缩小">
+      <button onClick={handleZoomOut} className="p-1.5 rounded-lg hover:bg-dark-100 text-dark-400 hover:text-dark-600 transition-colors" title="缩小">
         <ZoomOut className="w-4 h-4" />
       </button>
-      <button onClick={handleZoomIn} className="p-1.5 rounded-lg hover:bg-white/[0.06] text-dark-400 hover:text-dark-600 transition-colors" title="放大">
+      <button onClick={handleZoomIn} className="p-1.5 rounded-lg hover:bg-dark-100 text-dark-400 hover:text-dark-600 transition-colors" title="放大">
         <ZoomIn className="w-4 h-4" />
       </button>
-      <button onClick={handleFit} className="p-1.5 rounded-lg hover:bg-white/[0.06] text-dark-400 hover:text-dark-600 transition-colors" title="适应画布">
+      <button onClick={handleFit} className="p-1.5 rounded-lg hover:bg-dark-100 text-dark-400 hover:text-dark-600 transition-colors" title="适应画布">
         <RotateCcw className="w-4 h-4" />
       </button>
-      <div className="w-px h-4 bg-white/[0.06] mx-1" />
-      <button onClick={toggleFullscreen} className="p-1.5 rounded-lg hover:bg-white/[0.06] text-dark-400 hover:text-dark-600 transition-colors" title={isFullscreen ? "退出全屏" : "全屏"}>
+      <div className="w-px h-4 bg-dark-200 mx-1" />
+      <button onClick={toggleFullscreen} className="p-1.5 rounded-lg hover:bg-dark-100 text-dark-400 hover:text-dark-600 transition-colors" title={isFullscreen ? "退出全屏" : "全屏"}>
         {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
       </button>
     </div>
@@ -258,11 +252,11 @@ export default function KnowledgeGraph({
   if (isFullscreen) {
     return (
       <motion.div
-        className="fixed inset-0 z-50 bg-dark-50/95 backdrop-blur-xl flex flex-col"
+        className="fixed inset-0 z-50 bg-white/90 backdrop-blur-2xl flex flex-col"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
       >
-        <div className="flex items-center justify-between px-6 py-3 border-b border-white/[0.06]">
+        <div className="flex items-center justify-between px-6 py-3 border-b border-black/[0.06]">
           <span className="text-sm text-dark-400 font-medium">模块依赖图谱</span>
           {toolbar}
         </div>
@@ -275,8 +269,8 @@ export default function KnowledgeGraph({
   }
 
   return (
-    <div className="rounded-xl border border-white/[0.06] overflow-hidden">
-      <div className="flex items-center justify-between px-4 py-2 bg-white/[0.02] border-b border-white/[0.04]">
+    <div className="rounded-xl border border-black/[0.04] overflow-hidden">
+      <div className="flex items-center justify-between px-4 py-2 bg-dark-50 border-b border-black/[0.04]">
         <div className="flex items-center gap-2">
           <span className="text-xs text-dark-400">模块依赖图谱</span>
           <span className="text-xs text-dark-300">（点击节点查看详情）</span>
@@ -315,7 +309,7 @@ function NodeInfo({
               </span>
             )}
             {node.classes > 0 && (
-              <span className="text-xs px-1.5 py-0.5 rounded bg-accent-blue/10 text-accent-blue">
+              <span className="text-xs px-1.5 py-0.5 rounded bg-dark-100 text-dark-500">
                 {node.classes} 类
               </span>
             )}

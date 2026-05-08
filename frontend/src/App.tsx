@@ -1,5 +1,6 @@
 import { Routes, Route, Link, useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
+import { Brain } from "lucide-react";
 import Home from "./pages/Home";
 import ProjectDetail from "./pages/ProjectDetail";
 
@@ -8,23 +9,17 @@ export default function App() {
 
   return (
     <div className="min-h-screen relative">
-      {/* Aurora Background */}
-      <div className="aurora-bg">
-        <div className="aurora-orb-cyan" />
-      </div>
-
       {/* Navigation */}
-      <nav className="glass sticky top-0 z-50 border-b border-white/[0.06]">
+      <nav className="glass sticky top-0 z-50 border-b border-black/[0.06]" style={{ boxShadow: "0 1px 30px rgba(0, 0, 0, 0.04)" }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <Link to="/" className="flex items-center gap-3 group">
               <div className="relative">
-                <div className="w-9 h-9 bg-gradient-to-br from-primary-500 to-accent-blue rounded-xl flex items-center justify-center shadow-lg shadow-primary-500/20 group-hover:shadow-primary-500/40 transition-shadow duration-300">
-                  <span className="text-white font-bold text-sm">R</span>
+                <div className="w-9 h-9 bg-gradient-to-br from-primary-500 to-primary-600 rounded-xl flex items-center justify-center glow-blue transition-shadow duration-300">
+                  <Brain className="w-5 h-5 text-white" />
                 </div>
-                <div className="absolute inset-0 w-9 h-9 bg-gradient-to-br from-primary-500 to-accent-blue rounded-xl blur-lg opacity-40 group-hover:opacity-60 transition-opacity duration-300" />
               </div>
-              <span className="text-xl font-bold bg-gradient-to-r from-primary-300 via-primary-400 to-accent-blue bg-clip-text text-transparent">
+              <span className="text-xl font-bold text-dark-800">
                 RepoMind
               </span>
             </Link>

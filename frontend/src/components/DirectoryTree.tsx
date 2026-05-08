@@ -46,7 +46,7 @@ function TreeNodeView({ node, depth = 0 }: { node: TreeNode; depth?: number }) {
   return (
     <div>
       <motion.div
-        className="flex items-center gap-1 py-1 px-2 hover:bg-white/[0.04] rounded-lg cursor-pointer text-sm group transition-colors duration-200"
+        className="flex items-center gap-1 py-1 px-2 hover:bg-primary-50 rounded-lg cursor-pointer text-sm group transition-colors duration-200"
         style={{ paddingLeft: `${depth * 16 + 8}px` }}
         onClick={() => node.isDir && setExpanded(!expanded)}
         initial={{ opacity: 0, x: -5 }}
@@ -97,7 +97,7 @@ export default function DirectoryTree({ tree }: { tree: string }) {
 
   return (
     <motion.div
-      className="font-mono text-sm bg-white/[0.02] rounded-xl p-4 overflow-auto max-h-[600px] border border-white/[0.04]"
+      className="font-mono text-sm bg-dark-50 rounded-xl p-4 overflow-auto max-h-[600px] border border-black/[0.04]"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}

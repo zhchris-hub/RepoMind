@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { CheckCircle2, Circle, Loader2, XCircle, Sparkles, ArrowRight } from "lucide-react";
+import { CheckCircle2, Circle, XCircle, Sparkles, ArrowRight } from "lucide-react";
 import { getProject } from "../services/api";
 import type { Project, ProgressStep } from "../types";
 
@@ -18,7 +18,7 @@ function StepIcon({ status }: { status: ProgressStep["status"] }) {
     case "done":
       return <CheckCircle2 className="w-5 h-5 text-emerald-400" />;
     case "active":
-      return <Loader2 className="w-5 h-5 text-primary-400 animate-spin" />;
+      return <div className="dot-spinner w-5 h-5" />;
     case "error":
       return <XCircle className="w-5 h-5 text-red-400" />;
     default:
@@ -47,7 +47,7 @@ export default function AnalysisOverlay({
         const allDone = parsed.every((s) => s.status === "done" || s.status === "error");
         if (allDone) {
           setIsDone(true);
-          return true; // stop polling
+          return true;
         }
       }
     } catch {
@@ -91,19 +91,16 @@ export default function AnalysisOverlay({
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
     >
-      {/* Backdrop */}
-      <div className="absolute inset-0 bg-dark-50/95 backdrop-blur-xl" />
+      <div className="absolute inset-0 bg-white/90 backdrop-blur-2xl" />
 
-      {/* Card */}
       <motion.div
         className="relative glass-card p-8 max-w-md w-full mx-4"
         initial={{ opacity: 0, y: 20, scale: 0.97 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ delay: 0.1, duration: 0.4 }}
       >
-        {/* Header */}
         <div className="flex items-center gap-3 mb-8">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-500 to-accent-blue flex items-center justify-center shadow-lg shadow-primary-500/20">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center shadow-lg shadow-primary-500/10">
             <Sparkles className="w-5 h-5 text-white" />
           </div>
           <div>
@@ -114,7 +111,6 @@ export default function AnalysisOverlay({
           </div>
         </div>
 
-        {/* Steps */}
         <div className="space-y-1 mb-8">
           <AnimatePresence>
             {steps.map((step, i) => (
@@ -153,10 +149,9 @@ export default function AnalysisOverlay({
           </AnimatePresence>
         </div>
 
-        {/* Progress bar */}
-        <div className="h-1 bg-white/[0.06] rounded-full overflow-hidden mb-6">
+        <div className="h-1 bg-dark-200 rounded-full overflow-hidden mb-6">
           <motion.div
-            className="h-full bg-gradient-to-r from-primary-500 via-accent-blue to-accent-cyan rounded-full"
+            className="h-full bg-gradient-to-r from-primary-500 to-primary-400 rounded-full"
             initial={{ width: "0%" }}
             animate={{
               width: isDone
@@ -167,7 +162,6 @@ export default function AnalysisOverlay({
           />
         </div>
 
-        {/* Footer */}
         <AnimatePresence mode="wait">
           {isDone ? (
             <motion.div
@@ -178,7 +172,7 @@ export default function AnalysisOverlay({
             >
               <motion.button
                 onClick={handleContinue}
-                className="px-6 py-3 bg-gradient-to-r from-primary-600 to-primary-500 text-white rounded-xl font-medium flex items-center gap-2 mx-auto shadow-lg shadow-primary-500/20 hover:shadow-primary-500/40 transition-shadow duration-300"
+                className="px-6 py-3 bg-gradient-to-r from-primary-600 to-primary-500 text-white rounded-xl font-medium flex items-center gap-2 mx-auto glow-blue transition-shadow duration-300"
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
               >
