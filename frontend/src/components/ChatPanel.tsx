@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Send, Bot, User, Sparkles } from "lucide-react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { chat } from "../services/api";
+import { chat, getApiKey } from "../services/api";
 
 interface Message {
   role: "user" | "assistant";
@@ -22,6 +22,13 @@ export default function ChatPanel({ projectId }: { projectId: number }) {
 
   const handleSend = async () => {
     if (!input.trim() || loading) return;
+    if (!getApiKey()) {
+      setMessages((prev) => [
+        ...prev,
+        { role: "assistant", content: "请先在设置中添加 DeepSeek API Key 才能使用问答功能。点击右上角齿轮图标进行设置。" },
+      ]);
+      return;
+    }
 
     const question = input.trim();
     setInput("");

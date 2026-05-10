@@ -15,7 +15,10 @@ def _update_progress(project: Project, key: str, status: str):
     project.progress_steps = json.dumps(steps, ensure_ascii=False)
 
 
-async def call_deepseek(prompt: str, system: str = "") -> str:
+async def call_deepseek(prompt: str, system: str = "", api_key: str | None = None) -> str:
+    key = api_key or settings.DEEPSEEK_API_KEY
+    if not key:
+        raise ValueError("No DeepSeek API key available")
     messages = []
     if system:
         messages.append({"role": "system", "content": system})
@@ -25,7 +28,7 @@ async def call_deepseek(prompt: str, system: str = "") -> str:
         response = await client.post(
             f"{settings.DEEPSEEK_BASE_URL}/v1/chat/completions",
             headers={
-                "Authorization": f"Bearer {settings.DEEPSEEK_API_KEY}",
+                "Authorization": f"Bearer {key}",
                 "Content-Type": "application/json",
             },
             json={
@@ -40,7 +43,7 @@ async def call_deepseek(prompt: str, system: str = "") -> str:
         return data["choices"][0]["message"]["content"]
 
 
-async def generate_overview(project: Project) -> str:
+async def generate_overview(project: Project, api_key: str | None = None) -> str:
     files_info = ""
     if project.files:
         file_list = [f"- {f.path} ({f.language})" for f in project.files[:50]]
@@ -64,11 +67,12 @@ async def generate_overview(project: Project) -> str:
 
     return await call_deepseek(
         prompt,
-        system="你是一个资深软件架构师，擅长分析代码仓库结构和架构。请简洁准确地分析项目。"
+        system="你是一个资深软件架构师，擅长分析代码仓库结构和架构。请简洁准确地分析项目。",
+        api_key=api_key,
     )
 
 
-async def generate_architecture_diagram(project: Project) -> str:
+async def generate_architecture_diagram(project: Project, api_key: str | None = None) -> str:
     files_info = ""
     if project.files:
         file_list = [f"- {f.path}" for f in project.files[:30]]
@@ -92,11 +96,12 @@ async def generate_architecture_diagram(project: Project) -> str:
 
     return await call_deepseek(
         prompt,
-        system="你是一个架构图生成专家。只输出 Mermaid 图代码，不要任何解释文字。"
+        system="你是一个架构图生成专家。只输出 Mermaid 图代码，不要任何解释文字。",
+        api_key=api_key,
     )
 
 
-async def generate_readme(project: Project) -> str:
+async def generate_readme(project: Project, api_key: str | None = None) -> str:
     prompt = f"""根据以下项目分析结果，生成一份完整的 README.md：
 
 项目名称：{project.name}
@@ -119,11 +124,12 @@ async def generate_readme(project: Project) -> str:
 
     return await call_deepseek(
         prompt,
-        system="你是一个技术文档专家，擅长编写清晰的项目 README。"
+        system="你是一个技术文档专家，擅长编写清晰的项目 README。",
+        api_key=api_key,
     )
 
 
-async def generate_learning_path(project: Project) -> str:
+async def generate_learning_path(project: Project, api_key: str | None = None) -> str:
     files_info = ""
     if project.files:
         file_list = [f"- {f.path} ({f.language})" for f in project.files[:40]]
@@ -149,11 +155,12 @@ async def generate_learning_path(project: Project) -> str:
 
     return await call_deepseek(
         prompt,
-        system="你是一个技术导师，擅长引导新人快速理解复杂代码库。"
+        system="你是一个技术导师，擅长引导新人快速理解复杂代码库。",
+        api_key=api_key,
     )
 
 
-async def analyze_architecture(project: Project, db: AsyncSession) -> Project:
+async def analyze_architecture(project: Project, db: AsyncSession, api_key: str | None = None) -> Project:
     # Initialize architecture progress steps
     arch_steps = [
         {"key": "overview", "label": "生成项目概述", "status": "active"},
@@ -165,22 +172,22 @@ async def analyze_architecture(project: Project, db: AsyncSession) -> Project:
     project.progress_steps = json.dumps(arch_steps, ensure_ascii=False)
     await db.commit()
 
-    project.overview = await generate_overview(project)
+    project.overview = await generate_overview(project, api_key=api_key)
     _update_progress(project, "overview", "done")
     _update_progress(project, "diagram", "active")
     await db.commit()
 
-    project.architecture_diagram = await generate_architecture_diagram(project)
+    project.architecture_diagram = await generate_architecture_diagram(project, api_key=api_key)
     _update_progress(project, "diagram", "done")
     _update_progress(project, "readme", "active")
     await db.commit()
 
-    project.readme_content = await generate_readme(project)
+    project.readme_content = await generate_readme(project, api_key=api_key)
     _update_progress(project, "readme", "done")
     _update_progress(project, "learning", "active")
     await db.commit()
 
-    project.learning_path = await generate_learning_path(project)
+    project.learning_path = await generate_learning_path(project, api_key=api_key)
     _update_progress(project, "learning", "done")
     _update_progress(project, "done", "done")
     project.status = "completed"

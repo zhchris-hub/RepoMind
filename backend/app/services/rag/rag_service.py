@@ -1,7 +1,7 @@
 import json
 
 import httpx
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
@@ -26,7 +26,7 @@ def generate_embedding(text: str) -> list[float]:
 
 async def generate_embedding_async(text: str) -> list[float]:
     import asyncio
-    loop = asyncio.get_event_loop()
+    loop = asyncio.get_running_loop()
     return await loop.run_in_executor(None, generate_embedding, text)
 
 
@@ -56,6 +56,13 @@ def chunk_code(content: str, max_chars: int = 1500, overlap: int = 200) -> list[
 
 
 async def index_project(project_id: int, db: AsyncSession):
+    # Delete existing chunks to avoid duplicates on re-indexing
+    file_ids = await db.execute(select(File.id).where(File.project_id == project_id))
+    file_id_list = [row[0] for row in file_ids.fetchall()]
+    if file_id_list:
+        await db.execute(delete(Chunk).where(Chunk.file_id.in_(file_id_list)))
+        await db.commit()
+
     result = await db.execute(select(File).where(File.project_id == project_id))
     files = result.scalars().all()
 
@@ -91,8 +98,13 @@ async def search_similar_chunks(
     return [row[0] for row in result.fetchall()]
 
 
-async def answer_question(project_id: int, question: str, db: AsyncSession) -> str:
+async def answer_question(project_id: int, question: str, db: AsyncSession, api_key: str | None = None) -> str:
+    key = api_key or settings.DEEPSEEK_API_KEY
+    if not key:
+        return "需要 DeepSeek API Key 才能使用问答功能。请点击右上角齿轮图标添加您的 API Key。"
     chunks = await search_similar_chunks(project_id, question, db)
+    if not chunks:
+        return "该项目尚未完成代码索引，无法回答问题。请先运行架构分析以生成代码索引。"
     context = "\n---\n".join(chunks)
 
     result = await db.execute(select(Project).where(Project.id == project_id))
@@ -114,7 +126,7 @@ async def answer_question(project_id: int, question: str, db: AsyncSession) -> s
         response = await client.post(
             f"{settings.DEEPSEEK_BASE_URL}/v1/chat/completions",
             headers={
-                "Authorization": f"Bearer {settings.DEEPSEEK_API_KEY}",
+                "Authorization": f"Bearer {key}",
                 "Content-Type": "application/json",
             },
             json={

@@ -11,6 +11,7 @@ export interface Project {
   learning_path: string | null;
   progress_steps: string | null;
   ast_data: string | null;
+  is_demo?: boolean | null;
 }
 
 export interface ProgressStep {

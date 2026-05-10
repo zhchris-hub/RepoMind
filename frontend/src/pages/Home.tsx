@@ -14,6 +14,7 @@ import {
 import { analyzeRepo, listProjects } from "../services/api";
 import type { Project } from "../types";
 import AnalysisOverlay from "../components/AnalysisOverlay";
+import DemoProjects from "../components/DemoProjects";
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -265,8 +266,11 @@ export default function Home() {
         ))}
       </motion.div>
 
+      {/* Demo Projects */}
+      <DemoProjects projects={projects} />
+
       {/* Projects List */}
-      {projects.length > 0 && (
+      {projects.filter(p => !p.is_demo).length > 0 && (
         <motion.div
           variants={containerVariants}
           initial="hidden"
@@ -276,12 +280,12 @@ export default function Home() {
             <Clock className="w-4 h-4 text-dark-400" />
             <h2 className="text-sm font-semibold text-dark-600 uppercase tracking-wider">历史项目</h2>
             <span className="px-2 py-0.5 rounded-full bg-dark-100 text-xs text-dark-500 font-medium">
-              {projects.length}
+              {projects.filter(p => !p.is_demo).length}
             </span>
           </motion.div>
 
           <div className="space-y-2">
-            {projects.map((p) => (
+            {projects.filter(p => !p.is_demo).map((p) => (
               <motion.div
                 key={p.id}
                 variants={itemVariants}
@@ -327,7 +331,7 @@ export default function Home() {
       )}
 
       {/* Empty State */}
-      {projects.length === 0 && (
+      {projects.filter(p => !p.is_demo).length === 0 && projects.filter(p => p.is_demo).length === 0 && (
         <motion.div
           className="text-center py-8"
           initial={{ opacity: 0 }}

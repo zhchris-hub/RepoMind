@@ -1,11 +1,16 @@
+import { useState } from "react";
 import { Routes, Route, Link, useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { Brain } from "lucide-react";
+import { Brain, Settings } from "lucide-react";
 import Home from "./pages/Home";
 import ProjectDetail from "./pages/ProjectDetail";
+import ApiKeyModal from "./components/ApiKeyModal";
+import { getApiKey } from "./services/api";
 
 export default function App() {
   const location = useLocation();
+  const [showApiKeyModal, setShowApiKeyModal] = useState(false);
+  const hasApiKey = !!getApiKey();
 
   return (
     <div className="min-h-screen relative">
@@ -24,12 +29,22 @@ export default function App() {
               </span>
             </Link>
             <div className="flex items-center gap-3">
+              <button
+                onClick={() => setShowApiKeyModal(true)}
+                className="relative p-2 rounded-lg hover:bg-dark-100 transition-colors group"
+                title="设置 API Key"
+              >
+                <Settings className="w-4 h-4 text-dark-400 group-hover:text-dark-600 transition-colors" />
+                <div className={`absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-white ${hasApiKey ? "bg-emerald-400" : "bg-dark-300"}`} />
+              </button>
               <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse-glow" />
               <span className="text-sm text-dark-500 font-medium">AI 仓库理解平台</span>
             </div>
           </div>
         </div>
       </nav>
+
+      <ApiKeyModal isOpen={showApiKeyModal} onClose={() => setShowApiKeyModal(false)} />
 
       {/* Main Content with Route Transitions */}
       <main className="relative z-10">

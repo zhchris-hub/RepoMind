@@ -1,4 +1,4 @@
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
+from fastapi import APIRouter, BackgroundTasks, Depends, Header, HTTPException
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -36,36 +36,53 @@ class ProjectResponse(BaseModel):
     learning_path: str | None
     progress_steps: str | None
     ast_data: str | None
+    is_demo: bool | None = None
 
     class Config:
         from_attributes = True
 
 
-async def _run_architecture_bg(project_id: int):
-    async with async_session() as db:
-        result = await db.execute(
-            select(Project).options(selectinload(Project.files)).where(Project.id == project_id)
-        )
-        project = result.scalar_one_or_none()
-        if not project:
-            return
-        if project.status == "parsed":
-            await analyze_ast(project, db)
-            await db.refresh(project)
-        if project.status in ("parsed", "ast_analyzed"):
-            result2 = await db.execute(
+async def _run_architecture_bg(project_id: int, api_key: str | None = None):
+    try:
+        async with async_session() as db:
+            result = await db.execute(
                 select(Project).options(selectinload(Project.files)).where(Project.id == project_id)
             )
-            project = result2.scalar_one_or_none()
-            if project:
-                await analyze_architecture(project, db)
-                await index_project(project_id, db)
+            project = result.scalar_one_or_none()
+            if not project:
+                return
+            if project.status == "parsed":
+                await analyze_ast(project, db)
+                await db.refresh(project)
+            if project.status in ("parsed", "ast_analyzed"):
+                result2 = await db.execute(
+                    select(Project).options(selectinload(Project.files)).where(Project.id == project_id)
+                )
+                project = result2.scalar_one_or_none()
+                if project:
+                    await analyze_architecture(project, db, api_key=api_key)
+                    await index_project(project_id, db)
+    except Exception as e:
+        try:
+            async with async_session() as db:
+                result = await db.execute(select(Project).where(Project.id == project_id))
+                project = result.scalar_one_or_none()
+                if project:
+                    project.status = f"error: {str(e)[:200]}"
+                    await db.commit()
+        except Exception:
+            pass
 
 
 @router.post("/analyze", response_model=ProjectResponse)
-async def create_analysis(req: AnalyzeRequest, background_tasks: BackgroundTasks, db: AsyncSession = Depends(get_db)):
+async def create_analysis(
+    req: AnalyzeRequest,
+    background_tasks: BackgroundTasks,
+    db: AsyncSession = Depends(get_db),
+    x_api_key: str | None = Header(None),
+):
     project = await analyze_repo(req.repo_url, db)
-    background_tasks.add_task(_run_architecture_bg, project.id)
+    background_tasks.add_task(_run_architecture_bg, project.id, api_key=x_api_key)
     return project
 
 
@@ -95,19 +112,27 @@ async def run_ast_analysis(project_id: int, db: AsyncSession = Depends(get_db)):
 
 
 @router.post("/projects/{project_id}/analyze-architecture")
-async def run_architecture_analysis(project_id: int, db: AsyncSession = Depends(get_db)):
+async def run_architecture_analysis(
+    project_id: int,
+    db: AsyncSession = Depends(get_db),
+    x_api_key: str | None = Header(None),
+):
     result = await db.execute(
         select(Project).options(selectinload(Project.files)).where(Project.id == project_id)
     )
     project = result.scalar_one_or_none()
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
-    project = await analyze_architecture(project, db)
+    project = await analyze_architecture(project, db, api_key=x_api_key)
     await index_project(project_id, db)
     return {"status": "completed", "project_id": project.id}
 
 
 @router.post("/chat")
-async def chat(req: ChatRequest, db: AsyncSession = Depends(get_db)):
-    answer = await answer_question(req.project_id, req.question, db)
+async def chat(
+    req: ChatRequest,
+    db: AsyncSession = Depends(get_db),
+    x_api_key: str | None = Header(None),
+):
+    answer = await answer_question(req.project_id, req.question, db, api_key=x_api_key)
     return {"answer": answer}
